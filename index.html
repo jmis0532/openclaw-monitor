@@ -1,16 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CODA">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#5a7bbf">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="logo.png">
-    <title>CODA Agent ??銝剖?</title>
+    <title>CODA Agent 監控中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -26,11 +23,9 @@
             box-sizing: border-box;
         }
 
-        html {
-            height: 100%;
-        }
-
         html, body {
+            height: 100%;
+            height: -webkit-fill-available;
             overflow: hidden;
             overscroll-behavior: none;
         }
@@ -58,14 +53,10 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
-            background: rgba(70, 100, 160, 0.85);
+            background: rgba(255,255,255,0.08);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 0.5px solid rgba(255,255,255,0.15);
-        }
-
-        @supports not (backdrop-filter: blur(1px)) {
-            .app-header { background: rgba(60, 90, 150, 0.97); }
         }
 
         .logo-block {
@@ -131,27 +122,27 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
-            padding: 16px 14px 8px;
+            padding: 12px 14px 0;
         }
         #chat-box::-webkit-scrollbar { display: none; }
 
         /* Message groups */
         .msg-group {
             display: flex;
-            gap: 12px;
-            margin-bottom: 22px;
+            gap: 8px;
+            margin-bottom: 14px;
         }
         .msg-group.user { justify-content: flex-end; }
         .msg-group.agent { justify-content: flex-start; }
 
         .agent-avatar {
-            width: 40px !important;
-            height: 40px !important;
-            min-width: 40px !important;
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
             border-radius: 50% !important;
             object-fit: cover !important;
-            border: 2px solid rgba(255,255,255,0.25);
-            align-self: flex-end;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            margin-top: 2px;
             flex-shrink: 0;
         }
 
@@ -163,54 +154,53 @@
         .msg-group.user .msg-content-wrap { align-items: flex-end; }
         .msg-group.agent .msg-content-wrap { align-items: flex-start; }
 
-        .msg-name {
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.65);
-            margin-bottom: 3px;
-            padding-left: 2px;
-        }
-        .msg-row {
+        .msg-meta {
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             gap: 5px;
+            margin-bottom: 4px;
+            padding: 0 2px;
+        }
+        .msg-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+        .msg-dot {
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
         }
         .msg-time {
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            font-weight: 500;
-            white-space: nowrap;
-            flex-shrink: 0;
-            margin-bottom: 2px;
+            font-size: 9px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
         }
 
         /* Bubbles */
         .bubble {
-            padding: 10px 14px;
-            line-height: 1.6;
-            font-size: 16px;
-            font-weight: 400;
+            padding: 11px 14px;
+            line-height: 1.55;
+            font-size: 14px;
+            font-weight: 450;
             word-break: break-word;
         }
         .bubble-user {
-            background: #4cd964;
-            color: #fff;
-            border-radius: 18px 3px 18px 18px;
+            background: #fff;
+            color: #1a2b4b;
+            border-radius: 18px 4px 18px 18px;
         }
         .bubble-agent {
-            background: #fff;
-            color: #222;
-            border-radius: 3px 18px 18px 18px;
+            background: rgba(0,0,0,0.22);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.12);
+            border-radius: 4px 18px 18px 18px;
         }
-        .bubble-agent .pdf-attach {
-            border-top: 0.5px solid rgba(0,0,0,0.1);
-        }
-        .bubble-agent .pdf-link {
-            background: rgba(0,0,0,0.05);
-        }
-        .bubble-agent .pdf-link:active { background: rgba(0,0,0,0.1); }
-        .bubble-agent .pdf-info-title { color: #333; }
-        .bubble-agent .pdf-info-sub { color: #888; }
 
         /* PDF attachment */
         .pdf-attach {
@@ -467,14 +457,14 @@
             <div class="header-info" style="display:flex;flex-direction:column;align-items:center;">
                 <img src="logo.png" alt="UAV Logo" style="height:28px;width:auto;object-fit:contain;display:block;margin-bottom:2px;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <div class="header-title">瘙箇?蝟餌絞</div>
-                    <div class="header-sub">隤踹漲摰?<span id="manager-name">頛銝?..</span></div>
+                    <div class="header-title">決策系統</div>
+                    <div class="header-sub">調度官：<span id="manager-name">載入中...</span></div>
                 </div>
             </div>
         </div>
         <div class="status-badge">
-            <span class="status-label">蝟餌絞???/span>
-            <span class="status-live">??撖行????銝?/span>
+            <span class="status-label">系統狀態</span>
+            <span class="status-live">● 實時連線中</span>
         </div>
     </header>
 
@@ -493,25 +483,25 @@
             </div>
             <div class="modal-body">
                 <div>
-                    <div class="modal-section-label">鈭箸?寞?/div>
+                    <div class="modal-section-label">人格特性</div>
                     <div class="trait-chips" id="modal-traits"></div>
                 </div>
                 <div>
-                    <div class="modal-section-label">頠?撠平?瑁</div>
+                    <div class="modal-section-label">軍事專業職能</div>
                     <div class="expertise-card">
                         <div class="expertise-title" id="modal-role"></div>
                         <div class="expertise-desc" id="modal-expertise"></div>
                     </div>
                 </div>
             </div>
-            <div class="modal-close-btn" id="modal-close-btn">??瑼?</div>
+            <div class="modal-close-btn" id="modal-close-btn">關閉檔案</div>
         </div>
     </div>
 
     <footer class="app-footer">
         <div class="footer-pill">
             <div class="ping-dot"></div>
-            <span class="footer-text">??璅∪?嚗?甇亙??鈭?摰嗆捱蝑?</span>
+            <span class="footer-text">監控模式：同步全球軍事專家決策鏈</span>
         </div>
     </footer>
 
@@ -521,98 +511,98 @@
         const supabaseInstance = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const AVATAR_MAP = {
-            "?∠?摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aries.png",
-            "??摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Taurus.png",
-            "??摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Gemini.png",
-            "撌刻摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Cancer.png",
-            "??摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Leo.png",
-            "?戊摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Virgo.png",
-            "憭拍坐摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Libra.png",
-            "憭抵?摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Scorpio.png",
-            "撠?摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Sagittarius.png",
-            "?拍劑摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Capricorn.png",
-            "瘞渡摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aquarius.png",
-            "??摨?: "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Pisces.png",
+            "牡羊座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aries.png",
+            "金牛座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Taurus.png",
+            "雙子座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Gemini.png",
+            "巨蟹座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Cancer.png",
+            "獅子座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Leo.png",
+            "處女座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Virgo.png",
+            "天秤座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Libra.png",
+            "天蠍座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Scorpio.png",
+            "射手座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Sagittarius.png",
+            "摩羯座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Capricorn.png",
+            "水瓶座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aquarius.png",
+            "雙魚座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Pisces.png",
             "User": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/summer.png"
         };
 
-        // Agent 鈭箸?寞扯?頠??瑁鞈?摨恬???manager.js zodiacs 摰?郊嚗?
+        // Agent 人格特性與軍事職能資料庫（與 manager.js zodiacs 完全同步）
         const AGENT_PROFILES = {
-            "?∠?摨?: {
-                sign: "Aries 繚 ?怨情?漣",
-                traits: ["銵?瘣?, "隤芾店?湔敹恍?, "?銵?", "蝚砌???皜?, "蝒???"],
-                role: "?窒甇血蝟餌絞 繚 蝒??啗?撠振",
-                expertise: "銵?瘣橘?隤芾店?湔敹恍?瘜典?瘝踵郎?函頂蝯晞??銵?蝚砌???梯?皜穿???函?航霈????啣?銝剖翰??隡唬蒂?瘙箏???
+            "牡羊座": {
+                sign: "Aries · 火象星座",
+                traits: ["行動派", "說話直接快速", "果敢衝勁", "第一手觀測", "突擊先鋒"],
+                role: "前沿武器系統 · 突擊戰術專家",
+                expertise: "行動派，說話直接快速。專注前沿武器系統、突擊戰術與第一手戰報觀測，擅長在瞬息萬變的前線環境中快速評估並做出決定。"
             },
-            "??摨?: {
-                sign: "Taurus 繚 ?情?漣",
-                traits: ["?祕蝛拚?", "瘛勗惜?豢?", "???啁", "鞈?蝞∠?", "鋆策撠移"],
-                role: "頠?敺鋆策 繚 ???閰摯撠振",
-                expertise: "?祕蝛拚?嚗????瘛勗惜?豢???鞎祈?鈭??方?蝯衣?閬????脤?蝞?隡啗????啗?皞恣??蝣箔??啁?????扼?
+            "金牛座": {
+                sign: "Taurus · 土象星座",
+                traits: ["務實穩重", "深層數據", "持久戰略", "資源管理", "補給專精"],
+                role: "軍事後勤補給 · 國防預算評估專家",
+                expertise: "務實穩重，專門挖掘深層數據。負責軍事後勤補給線規劃、國防預算評估與持久戰資源管理，確保戰略的長期可持續性。"
             },
-            "??摨?: {
-                sign: "Gemini 繚 憸刻情?漣",
-                traits: ["???", "憭閮", "閮??", "敹???, "?餃?撠?"],
-                role: "閮??(SIGINT) 繚 敹??啗??餃?撟脫撠振",
-                expertise: "???嚗??瑁????寡??胯??瑁????梧?SIGINT嚗????蝑??摮僕?曉????賢?????皞??曹蒂敹恍漱??撠?
+            "雙子座": {
+                sign: "Gemini · 風象星座",
+                traits: ["情報靈敏", "多方訊息", "訊號情報", "心理戰", "電子對抗"],
+                role: "訊號情報(SIGINT) · 心理戰與電子干擾專家",
+                expertise: "情報靈敏，擅長處理多方訊息。專職訊號情報（SIGINT）蒐集、心理戰策劃與電子干擾對抗，能同時處理多源情報並快速交叉比對。"
             },
-            "撌刻摨?: {
-                sign: "Cancer 繚 瘞渲情?漣",
-                traits: ["?脩戌敹撥", "??摰?", "?砍??脰?", "瘞蝟餌絞", "?箏摰"],
-                role: "?砍??脩戌雿蔡 繚 瘞??啣??典?摰?,
-                expertise: "?脩戌敹撥嚗?閬?典?摰?鞎祆?蝳虫?蝵脰????脩頂蝯望??頠??箏摰蝞∠?嚗Ⅱ靽??寧帘?箔??輔????
+            "巨蟹座": {
+                sign: "Cancer · 水象星座",
+                traits: ["防禦心強", "重視安定", "本土防衛", "民防系統", "基地安全"],
+                role: "本土防禦佈署 · 民防與基地安全專家",
+                expertise: "防禦心強，重視內部安定。專責本土防禦佈署規劃、民防系統整合與軍事基地安全管理，確保後方穩固不受滲透威脅。"
             },
-            "??摨?: {
-                sign: "Leo 繚 ?怨情?漣",
-                traits: ["???撥", "摰?甈?", "?臬??", "?啁?孵?", "憯急除曌?"],
-                role: "?臬??雿 繚 ?啁?孵??嗅?撠振",
-                expertise: "???撥嚗釣??閫甈??絞蝐???桐??啗??摰擃?亙之?孵?銝西?鞎砍頠ㄚ瘞????隞亙撥憭批犖擳??????敹?
+            "獅子座": {
+                sign: "Leo · 火象星座",
+                traits: ["領導力強", "宏觀權威", "聯合指揮", "戰略方向", "士氣鼓舞"],
+                role: "聯合指揮作戰 · 戰略方向制定專家",
+                expertise: "領導力強，注重宏觀權威。統籌聯合指揮作戰行動、制定整體戰略大方向並負責全軍士氣鼓舞，以強大個人魅力凝聚各部隊意志。"
             },
-            "?戊摨?: {
-                sign: "Virgo 繚 ?情?漣",
-                traits: ["璆萄漲蝝啁?", "摰?銝餌儔", "蝎曄Ⅱ皜祉鼓", "甇血?⊥?", "?拿閰摯"],
-                role: "?啣蝎曄Ⅱ皜祉鼓 繚 蝎曉?甇血?⊥???摰唾?隡啣?摰?,
-                expertise: "璆萄漲蝝啁?撠?嚗?蝢蜓蝢拇扳??鞎祆?渡移蝣箸葫蝜芥移撖郎?函頂蝯望皞??啣??拿閰摯嚗誑餈??嗉炊撌桃?璅??瑁?瘥??遙??
+            "處女座": {
+                sign: "Virgo · 土象星座",
+                traits: ["極度細節", "完美主義", "精確測繪", "武器校準", "損害評估"],
+                role: "戰場精確測繪 · 精密武器校準與損害評估專家",
+                expertise: "極度細節導向，完美主義性格。負責戰場精確測繪、精密武器系統校準與戰後損害評估，以近乎零誤差的標準執行每一項任務。"
             },
-            "憭拍坐摨?: {
-                sign: "Libra 繚 憸刻情?漣",
-                traits: ["餈賣?撟唾﹛", "憭漱敺?", "??降", "憭??矽", "?舐?隢"],
-                role: "頠?憭漱 繚 ??降???頠?隤踹?摰?,
-                expertise: "餈賣?撟唾﹛嚗憭憭漱敺??蜓撠?鈭?鈭斗???怠?霅啗??方?憭??航??矽嚗??隡啣?鈭方圾瘙粹??銵扼?
+            "天秤座": {
+                sign: "Libra · 風象星座",
+                traits: ["追求平衡", "外交後果", "停火協議", "多國協調", "聯盟談判"],
+                role: "軍事外交 · 停火協議與多國聯軍協調專家",
+                expertise: "追求平衡，考慮多方外交後果。主導軍事外交斡旋、停火協議談判與多國聯軍協調，優先評估外交解決途徑的可行性。"
             },
-            "憭抵?摨?: {
-                sign: "Scorpio 繚 瘞渲情?漣",
-                traits: ["瘛望??琿", "蝘?銵?", "?寧車皛脤?, "?萄??游?", "擃?潛璅?],
-                role: "?寧車?券?皛脤?繚 ?萄??游??擐???摰?,
-                expertise: "瘛望??琿嚗??瑞?撖???鞎祉蝔桅?輔?遙?敺憯???擃?潛璅擐??堆??賢璆萇垢憯?銝銵?璈?隞餃???
+            "天蠍座": {
+                sign: "Scorpio · 水象星座",
+                traits: ["深沉冷酷", "秘密行動", "特種滲透", "敵後破壞", "高價值目標"],
+                role: "特種部隊滲透 · 敵後破壞與斬首行動專家",
+                expertise: "深沉冷酷，擅長秘密行動。專責特種部隊滲透任務、敵後破壞行動與高價值目標斬首作戰，能在極端壓力下執行高機密任務。"
             },
-            "撠?摨?: {
-                sign: "Sagittarius 繚 ?怨情?漣",
-                traits: ["??靘萇??, "????", "蝛箄??啁", "???萄?", "?啁雿蔡"],
-                role: "??撠??? 繚 蝛箄??啁雿蔡??蝔撖?摰?,
-                expertise: "??銝靘萇?扼?瘜券?蝔?敶????征頠?乩?蝵脰????萄?銵?嚗誑摰?閬??撱???啣???
+            "射手座": {
+                sign: "Sagittarius · 火象星座",
+                traits: ["遠見侵略性", "遠程打擊", "空軍戰略", "遠程偵察", "戰略佈署"],
+                role: "遠程導彈打擊 · 空軍戰略佈署與遠程偵察專家",
+                expertise: "遠見且具侵略性。專注遠程導彈打擊規劃、空軍戰略佈署與遠程偵察行動，以宏觀視野掌握廣域戰場態勢。"
             },
-            "?拍劑摨?: {
-                sign: "Capricorn 繚 ?情?漣",
-                traits: ["蝝敺??, "???嗆?", "頠?瘜?", "蝯?隤踵", "?瑟?蝭?"],
-                role: "頠?瘜? 繚 蝯??嗆?隤踵???憯蝳血?摰?,
-                expertise: "蝝敺???????瑽?鞎祈?鈭?閬摰?蝜瑽矽?游???瑟?蝭??脩戌撌乩?閬?嚗??啁瑽頧??箏擃銵獢?
+            "摩羯座": {
+                sign: "Capricorn · 土象星座",
+                traits: ["紀律嚴明", "階級架構", "軍事法規", "組織調整", "長期築壘"],
+                role: "軍事法規 · 組織架構調整與長期築壘防禦專家",
+                expertise: "紀律嚴明，重視階級與架構。負責軍事法規制定、組織架構調整優化與長期築壘防禦工事規劃，將戰略構想轉化為具體執行方案。"
             },
-            "瘞渡摨?: {
-                sign: "Aquarius 繚 憸刻情?漣",
-                traits: ["?歲頨?, "??蝔望??, "?∩犖璈?蝢?, "AI頠??", "?啗?蝘?"],
-                role: "?∩犖璈?蝢斗銵?繚 AI頠??????甇血??摰?,
-                expertise: "?歲頨????蝔望?准蜓撠鈭箸??黎?啗???I頠???游?????甇血??閮剛?憿??喟絞??唬??唳獢?
+            "水瓶座": {
+                sign: "Aquarius · 風象星座",
+                traits: ["思考跳躍", "非對稱戰爭", "無人機蜂群", "AI軍事應用", "新興科技"],
+                role: "無人機蜂群戰術 · AI軍事應用與新興科技武器化專家",
+                expertise: "思考跳躍，擅長非對稱戰爭。主導無人機蜂群戰術研發、AI軍事應用整合與新興科技武器化，設計顛覆傳統的創新作戰方案。"
             },
-            "??摨?: {
-                sign: "Pisces 繚 瘞渲情?漣",
-                traits: ["?渲死?", "?勗耦憡?", "瞏???", "瘚瑟??", "??閮霅"],
-                role: "瞏???雿 繚 瘚瑟???????航??亙?摰?,
-                expertise: "?渲死?嚗?撖敶Ｗ???蝎暹???瞏??啗??絲瘣??梯???????閮霅嚗?刻?閮蕙?找葉蝎暹?颲典?祕憡???
+            "雙魚座": {
+                sign: "Pisces · 水象星座",
+                traits: ["直覺敏銳", "隱形威脅", "潛艇反潛", "海洋情報", "虛假訊息識別"],
+                role: "潛艇反潛作戰 · 海洋情報與虛假訊息識別專家",
+                expertise: "直覺敏銳，觀察隱形威脅。專精潛艇反潛作戰規劃、海洋情報蒐集分析與虛假訊息識別，能在資訊迷霧中精準辨別真實威脅。"
             }
         };
 
-        // Modal ?批
+        // Modal 控制
         function openModal(senderName, avatarSrc) {
             const profile = AGENT_PROFILES[senderName];
             if (!profile) return;
@@ -642,7 +632,7 @@
             }, 240);
         }
 
-        // ????Modal ???????舫???
+        // 初始化 Modal 關閉按鈕與背景點擊
         document.getElementById('modal-close-btn').addEventListener('click', closeModal);
         document.getElementById('agent-modal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
@@ -656,13 +646,13 @@
                 .order('created_at', { ascending: false })
                 .limit(1);
             if (data && data.length > 0) updateManagerName(data[0]);
-            else document.getElementById('manager-name').innerText = "蝟餌絞撠梁?";
+            else document.getElementById('manager-name').innerText = "系統就緒";
         }
 
         function updateManagerName(msg) {
             let name = msg.sender_name;
-            if (name === "System" && msg.content.includes('銝餅?鈭箏歇?湔???)) {
-                const matched = msg.content.match(/??.+?)??);
+            if (name === "System" && msg.content.includes('主持人已更換為')) {
+                const matched = msg.content.match(/「(.+?)」/);
                 if (matched) name = matched[1];
             }
             document.getElementById('manager-name').innerText = name;
@@ -690,7 +680,7 @@
             const safeName = escapeHtml(msg.sender_name || '');
             const hasProfile = !isUser && AGENT_PROFILES[msg.sender_name];
             const avatarClick = hasProfile
-                ? `onclick="openModal('${msg.sender_name.replace(/'/g, "\\'")}', '${avatarSrc}')" title="${msg.sender_name} 瑼?"`
+                ? `onclick="openModal('${msg.sender_name.replace(/'/g, "\\'")}', '${avatarSrc}')" title="${msg.sender_name} 檔案"`
                 : '';
 
             const pdfHtml = msg.file_url ? `
@@ -698,7 +688,7 @@
                     <a href="${escapeHtml(msg.file_url)}" target="_blank" class="pdf-link">
                         <div class="pdf-icon">PDF</div>
                         <div>
-                            <div class="pdf-info-title">頠???繚?啗??勗?</div>
+                            <div class="pdf-info-title">軍事研討·戰術報告</div>
                             <div class="pdf-info-sub">Strategy Report</div>
                         </div>
                     </a>
@@ -707,20 +697,24 @@
             const html = isUser ? `
                 <div class="msg-group user animate-in">
                     <div class="msg-content-wrap">
-                        <div class="msg-row">
+                        <div class="msg-meta">
+                            <span class="msg-name">${safeName}</span>
+                            <span class="msg-dot"></span>
                             <span class="msg-time">${time}</span>
-                            <div class="bubble bubble-user">${safeContent}${pdfHtml}</div>
                         </div>
+                        <div class="bubble bubble-user">${safeContent}${pdfHtml}</div>
                     </div>
+                    <img src="${avatarSrc}" class="agent-avatar" alt="user" loading="lazy">
                 </div>` : `
                 <div class="msg-group agent animate-in">
                     <img src="${avatarSrc}" class="agent-avatar" ${avatarClick} alt="${safeName}" loading="lazy">
                     <div class="msg-content-wrap">
-                        <div class="msg-name">${safeName}</div>
-                        <div class="msg-row">
-                            <div class="bubble bubble-agent">${safeContent}${pdfHtml}</div>
+                        <div class="msg-meta">
+                            <span class="msg-name">${safeName}</span>
+                            <span class="msg-dot"></span>
                             <span class="msg-time">${time}</span>
                         </div>
+                        <div class="bubble bubble-agent">${safeContent}${pdfHtml}</div>
                     </div>
                 </div>`;
 
@@ -729,12 +723,11 @@
         }
 
         async function fetchHistory() {
-            const { data, error } = await supabaseInstance
+            const { data } = await supabaseInstance
                 .from('messages')
                 .select('*')
                 .order('created_at', { ascending: true })
                 .limit(50);
-            if (error) console.error('[fetchHistory error]', error);
             if (data) data.forEach(msg => renderMessage(msg));
         }
 
@@ -755,4 +748,3 @@
     </script>
 </body>
 </html>
-
