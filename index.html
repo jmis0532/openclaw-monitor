@@ -20,45 +20,113 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ══════════════════════════════════════
+           響應式變數：手機 / 平板 / 電腦
+           ══════════════════════════════════════ */
         :root {
-            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-top:    env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --safe-left: env(safe-area-inset-left, 0px);
-            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-left:   env(safe-area-inset-left, 0px);
+            --safe-right:  env(safe-area-inset-right, 0px);
+
+            /* 手機預設 (< 600px) */
+            --body-max:  100%;
+            --av:        38px;   /* 頭像 */
+            --bf:        15px;   /* 氣泡字體 */
+            --bp:        10px 13px;
+            --nf:        11px;   /* 名稱 */
+            --tf:        10px;   /* 時間 */
+            --cp:        10px 12px 12px;
+            --mg:        8px;
+            --mb:        14px;
+            --hp:        10px 14px 8px;
+            --ls:        36px;   /* logo */
+            --hf:        14px;   /* header 標題 */
+            --fp:        8px 14px 10px;
+            --cw:        80%;    /* 氣泡最大寬 */
+            --modal-max: 100%;
         }
 
+        /* 平板 (≥ 600px) */
+        @media (min-width: 600px) {
+            :root {
+                --body-max:  640px;
+                --av:        44px;
+                --bf:        16px;
+                --bp:        11px 15px;
+                --nf:        12px;
+                --tf:        11px;
+                --cp:        14px 18px 14px;
+                --mg:        10px;
+                --mb:        18px;
+                --hp:        12px 20px 10px;
+                --ls:        40px;
+                --hf:        15px;
+                --fp:        10px 20px 12px;
+                --cw:        75%;
+                --modal-max: 560px;
+            }
+        }
+
+        /* 電腦 (≥ 1024px) */
+        @media (min-width: 1024px) {
+            :root {
+                --body-max:  900px;
+                --av:        50px;
+                --bf:        17px;
+                --bp:        12px 17px;
+                --nf:        13px;
+                --tf:        12px;
+                --cp:        18px 28px 18px;
+                --mg:        12px;
+                --mb:        22px;
+                --hp:        14px 28px 12px;
+                --ls:        44px;
+                --hf:        16px;
+                --fp:        12px 28px 14px;
+                --cw:        68%;
+                --modal-max: 600px;
+            }
+        }
+
+        /* ══ 基礎重置 ══ */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             box-sizing: border-box;
         }
 
-        html, body {
+        html {
             height: 100%;
-            height: var(--vh, 100vh);
-            overflow: hidden;
-            overscroll-behavior: none;
+            background: #4a6aa0; /* 電腦兩側背景 */
         }
 
         body {
+            /* 高度：JS 注入 --vh，保證 HTTP/HTTPS 一致 */
+            height: var(--vh, 100vh);
+            overflow: hidden;
+            overscroll-behavior: none;
+            /* 響應式置中容器 */
+            width: 100%;
+            max-width: var(--body-max);
+            margin: 0 auto;
             background-color: #6b8ec7;
             background-image:
                 radial-gradient(ellipse at 20% 0%, #7fa3d8 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 100%, #5570a8 0%, transparent 60%);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                         "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            position: fixed;
-            inset: 0;
             padding-top: var(--safe-top);
             padding-bottom: var(--safe-bottom);
             padding-left: var(--safe-left);
             padding-right: var(--safe-right);
         }
 
-        /* Header */
+        /* ══ Header ══ */
         .app-header {
-            padding: 12px 16px 10px;
+            padding: var(--hp);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -70,8 +138,8 @@
         }
 
         .logo-block {
-            width: 38px;
-            height: 38px;
+            width: var(--ls);
+            height: var(--ls);
             background: rgba(255,255,255,0.18);
             border-radius: 12px;
             display: flex;
@@ -92,7 +160,7 @@
         .header-title {
             color: #fff;
             font-weight: 800;
-            font-size: 15px;
+            font-size: var(--hf);
             letter-spacing: -0.3px;
             line-height: 1.2;
         }
@@ -126,29 +194,30 @@
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         .status-live { animation: blink 1.8s ease-in-out infinite; }
 
-        /* Chat area */
+        /* ══ 聊天區 ══ */
         #chat-box {
             flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
-            padding: 12px 14px 0;
+            padding: var(--cp);
+            scroll-behavior: smooth;
         }
         #chat-box::-webkit-scrollbar { display: none; }
 
-        /* Message groups */
+        /* ══ 訊息群組 ══ */
         .msg-group {
             display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
+            gap: var(--mg);
+            margin-bottom: var(--mb);
         }
-        .msg-group.user { justify-content: flex-end; }
+        .msg-group.user  { justify-content: flex-end; }
         .msg-group.agent { justify-content: flex-start; }
 
         .agent-avatar {
-            width: 34px !important;
-            height: 34px !important;
-            min-width: 34px !important;
+            width: var(--av) !important;
+            height: var(--av) !important;
+            min-width: var(--av) !important;
             border-radius: 50% !important;
             object-fit: cover !important;
             border: 1.5px solid rgba(255,255,255,0.25);
@@ -159,9 +228,9 @@
         .msg-content-wrap {
             display: flex;
             flex-direction: column;
-            max-width: 78%;
+            max-width: var(--cw);
         }
-        .msg-group.user .msg-content-wrap { align-items: flex-end; }
+        .msg-group.user  .msg-content-wrap { align-items: flex-end; }
         .msg-group.agent .msg-content-wrap { align-items: flex-start; }
 
         .msg-meta {
@@ -172,11 +241,11 @@
             padding: 0 2px;
         }
         .msg-name {
-            font-size: 10px;
+            font-size: var(--nf);
             font-weight: 700;
             color: rgba(255,255,255,0.55);
             text-transform: uppercase;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.12em;
         }
         .msg-dot {
             width: 2px;
@@ -185,17 +254,17 @@
             background: rgba(255,255,255,0.2);
         }
         .msg-time {
-            font-size: 9px;
+            font-size: var(--tf);
             color: rgba(255,255,255,0.3);
             font-weight: 600;
         }
 
-        /* Bubbles */
+        /* ══ 氣泡 ══ */
         .bubble {
-            padding: 11px 14px;
+            padding: var(--bp);
             line-height: 1.55;
-            font-size: 14px;
-            font-weight: 450;
+            font-size: var(--bf);
+            font-weight: 400;
             word-break: break-word;
         }
         .bubble-user {
@@ -212,7 +281,7 @@
             border-radius: 4px 18px 18px 18px;
         }
 
-        /* PDF attachment */
+        /* ══ PDF 附件 ══ */
         .pdf-attach {
             margin-top: 10px;
             padding-top: 10px;
@@ -256,9 +325,9 @@
             letter-spacing: 0.05em;
         }
 
-        /* Footer */
+        /* ══ Footer ══ */
         .app-footer {
-            padding: 10px 16px 12px;
+            padding: var(--fp);
             flex-shrink: 0;
         }
         .footer-pill {
@@ -274,8 +343,8 @@
             gap: 8px;
         }
         @keyframes ping {
-            0% { transform: scale(1); opacity: 1; }
-            75%, 100% { transform: scale(2); opacity: 0; }
+            0%      { transform: scale(1); opacity: 1; }
+            75%,100%{ transform: scale(2); opacity: 0; }
         }
         .ping-dot {
             width: 6px;
@@ -301,20 +370,20 @@
             text-transform: uppercase;
         }
 
-        /* Fade-in animation */
+        /* ══ 淡入動畫 ══ */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            to   { opacity: 1; transform: translateY(0); }
         }
         .animate-in { animation: fadeInUp 0.25s ease-out; }
 
-        /* Agent profile modal */
+        /* ══ Agent Profile Modal ══ */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 100;
-            background: rgba(10, 18, 40, 0.55);
+            background: rgba(10,18,40,0.55);
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
             align-items: flex-end;
@@ -324,25 +393,25 @@
 
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            to   { transform: translateY(0);    opacity: 1; }
         }
         @keyframes slideDown {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(100%); opacity: 0; }
+            from { transform: translateY(0);    opacity: 1; }
+            to   { transform: translateY(100%); opacity: 0; }
         }
 
         .modal-sheet {
             width: 100%;
-            max-width: 480px;
+            max-width: var(--modal-max);
             background: linear-gradient(160deg, #1a2e5a 0%, #0f1e3d 100%);
             border-radius: 24px 24px 0 0;
             border-top: 0.5px solid rgba(255,255,255,0.15);
             padding-bottom: var(--safe-bottom);
-            animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+            animation: slideUp 0.32s cubic-bezier(0.32,0.72,0,1);
             overflow: hidden;
         }
         .modal-sheet.closing {
-            animation: slideDown 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+            animation: slideDown 0.25s cubic-bezier(0.32,0.72,0,1) forwards;
         }
 
         .modal-handle {
