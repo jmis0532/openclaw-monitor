@@ -723,11 +723,12 @@
         }
 
         async function fetchHistory() {
-            const { data } = await supabaseInstance
+            const { data, error } = await supabaseInstance
                 .from('messages')
                 .select('*')
                 .order('created_at', { ascending: true })
                 .limit(50);
+            if (error) console.error('[fetchHistory error]', error);
             if (data) data.forEach(msg => renderMessage(msg));
         }
 
