@@ -38,7 +38,7 @@
             overscroll-behavior: none;
             /* 手機：撐滿全寬；桌機：置中 480px 欄 */
             width: 100%;
-            max-width: 480px;
+            max-width: 600px;
             margin: 0 auto;
             background-color: #6b8ec7;
             background-image:
@@ -452,6 +452,43 @@
 
         .agent-avatar { cursor: pointer; }
         .agent-avatar:active { opacity: 0.75; transform: scale(0.92); transition: transform 0.1s; }
+
+        /* ── 平板 (≥ 600px) ── */
+        @media (min-width: 600px) {
+            body { max-width: 720px; }
+            .agent-avatar {
+                width: 46px !important;
+                height: 46px !important;
+                min-width: 46px !important;
+            }
+            .bubble { font-size: 17px; padding: 12px 16px; }
+            .msg-name { font-size: 13px; }
+            .msg-time { font-size: 12px; }
+            .msg-group { gap: 12px; margin-bottom: 20px; }
+            .msg-content-wrap { max-width: 72%; }
+            .app-header { padding: 14px 20px 12px; }
+            #chat-box { padding: 16px 18px 0; }
+            .app-footer { padding: 12px 20px 14px; }
+        }
+
+        /* ── 桌機 (≥ 900px) ── */
+        @media (min-width: 900px) {
+            body { max-width: 860px; }
+            .agent-avatar {
+                width: 52px !important;
+                height: 52px !important;
+                min-width: 52px !important;
+            }
+            .bubble { font-size: 18px; padding: 13px 18px; }
+            .msg-name { font-size: 14px; }
+            .msg-time { font-size: 13px; }
+            .msg-group { gap: 14px; margin-bottom: 24px; }
+            .msg-content-wrap { max-width: 68%; }
+            .app-header { padding: 16px 24px 14px; }
+            .header-title { font-size: 17px; }
+            #chat-box { padding: 20px 24px 0; }
+            .app-footer { padding: 14px 24px 16px; }
+        }
     </style>
 </head>
 <body>
