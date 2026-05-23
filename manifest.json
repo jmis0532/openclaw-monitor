@@ -2,11 +2,10 @@
   "name": "CODA Agent 監控中心",
   "short_name": "CODA",
   "description": "12星座共識決策系統 實時監控",
-  "start_url": "/openclaw-monitor/",
-  "scope": "/openclaw-monitor/",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#6b8ec7",
-  "theme_color": "#5a7bbf",
+  "background_color": "#efefef",
+  "theme_color": "#4a90d9",
   "orientation": "portrait-primary",
   "icons": [
     {
