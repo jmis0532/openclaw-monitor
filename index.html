@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5a7bbf">
+    <title>CODA Agent 監控中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            height: -webkit-fill-available;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        body {
+            background-color: #6b8ec7;
+            background-image:
+                radial-gradient(ellipse at 20% 0%, #7fa3d8 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, #5570a8 0%, transparent 60%);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            inset: 0;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+        }
+
+        /* Header */
+        .app-header {
+            padding: 12px 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(255,255,255,0.15);
+        }
+
+        .logo-block {
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 0.5px solid rgba(255,255,255,0.3);
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            color: #fff;
+            font-weight: 900;
+            font-size: 11px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-info { margin-left: 10px; }
+        .header-title {
+            color: #fff;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+        .header-sub {
+            color: rgba(255,255,255,0.65);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+        }
+        .header-sub span { color: #fff; }
+
+        .status-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1px;
+        }
+        .status-label {
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .status-live {
+            color: #6ee7b7;
+            font-size: 9px;
+            font-weight: 800;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .status-live { animation: blink 1.8s ease-in-out infinite; }
+
+        /* Chat area */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            padding: 12px 14px 0;
+        }
+        #chat-box::-webkit-scrollbar { display: none; }
+
+        /* Message groups */
+        .msg-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .msg-group.user { justify-content: flex-end; }
+        .msg-group.agent { justify-content: flex-start; }
+
+        .agent-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            border-radius: 50% !important;
+            object-fit: cover !important;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .msg-content-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: 78%;
+        }
+        .msg-group.user .msg-content-wrap { align-items: flex-end; }
+        .msg-group.agent .msg-content-wrap { align-items: flex-start; }
+
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 4px;
+            padding: 0 2px;
+        }
+        .msg-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+        .msg-dot {
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+        }
+        .msg-time {
+            font-size: 9px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+        }
+
+        /* Bubbles */
+        .bubble {
+            padding: 11px 14px;
+            line-height: 1.55;
+            font-size: 14px;
+            font-weight: 450;
+            word-break: break-word;
+        }
+        .bubble-user {
+            background: #fff;
+            color: #1a2b4b;
+            border-radius: 18px 4px 18px 18px;
+        }
+        .bubble-agent {
+            background: rgba(0,0,0,0.22);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
+            border: 0.5px solid rgba(255,255,255,0.12);
+            border-radius: 4px 18px 18px 18px;
+        }
+
+        /* PDF attachment */
+        .pdf-attach {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 0.5px solid rgba(255,255,255,0.12);
+        }
+        .pdf-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-decoration: none;
+            transition: background 0.2s;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.1);
+        }
+        .pdf-link:active { background: rgba(255,255,255,0.14); }
+        .pdf-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(239,68,68,0.75);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 900;
+            font-size: 9px;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+        .pdf-info-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+        }
+        .pdf-info-sub {
+            font-size: 9px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Footer */
+        .app-footer {
+            padding: 10px 16px 12px;
+            flex-shrink: 0;
+        }
+        .footer-pill {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255,255,255,0.18);
+            border-radius: 100px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        @keyframes ping {
+            0% { transform: scale(1); opacity: 1; }
+            75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        .ping-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #60a5fa;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .ping-dot::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #60a5fa;
+            animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;
+        }
+        .footer-text {
+            color: rgba(255,255,255,0.6);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* Fade-in animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeInUp 0.25s ease-out; }
+
+        /* Agent profile modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(10, 18, 40, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+
+        .modal-sheet {
+            width: 100%;
+            max-width: 480px;
+            background: linear-gradient(160deg, #1a2e5a 0%, #0f1e3d 100%);
+            border-radius: 24px 24px 0 0;
+            border-top: 0.5px solid rgba(255,255,255,0.15);
+            padding-bottom: var(--safe-bottom);
+            animation: slideUp 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+            overflow: hidden;
+        }
+        .modal-sheet.closing {
+            animation: slideDown 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        }
+
+        .modal-handle {
+            width: 36px;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 12px auto 0;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px 14px;
+            border-bottom: 0.5px solid rgba(255,255,255,0.08);
+        }
+
+        .modal-avatar-lg {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.25);
+            flex-shrink: 0;
+        }
+
+        .modal-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+        .modal-sign {
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .modal-body {
+            padding: 16px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 55vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .modal-body::-webkit-scrollbar { display: none; }
+
+        .modal-section-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .trait-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .trait-chip {
+            background: rgba(255,255,255,0.1);
+            border: 0.5px solid rgba(255,255,255,0.15);
+            border-radius: 100px;
+            padding: 5px 11px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .expertise-card {
+            background: rgba(255,255,255,0.06);
+            border: 0.5px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+        .expertise-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 4px;
+        }
+        .expertise-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.55;
+        }
+
+        .modal-close-btn {
+            margin: 0 20px 16px;
+            padding: 13px;
+            background: rgba(255,255,255,0.08);
+            border: 0.5px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+        }
+        .modal-close-btn:active { background: rgba(255,255,255,0.14); }
+
+        .agent-avatar { cursor: pointer; }
+        .agent-avatar:active { opacity: 0.75; transform: scale(0.92); transition: transform 0.1s; }
+    </style>
+</head>
+<body>
+
+    <header class="app-header" style="position:relative;">
+        <div style="display:flex;align-items:center;">
+            <div class="logo-block">
+                <span class="logo-text">CODA</span>
+            </div>
+            <div class="header-info" style="display:flex;flex-direction:column;align-items:center;">
+                <img src="logo.png" alt="UAV Logo" style="height:28px;width:auto;object-fit:contain;display:block;margin-bottom:2px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="header-title">決策系統</div>
+                    <div class="header-sub">調度官：<span id="manager-name">載入中...</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="status-badge">
+            <span class="status-label">系統狀態</span>
+            <span class="status-live">● 實時連線中</span>
+        </div>
+    </header>
+
+    <main id="chat-box"></main>
+
+    <!-- Agent Profile Modal -->
+    <div class="modal-overlay" id="agent-modal">
+        <div class="modal-sheet" id="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <img id="modal-avatar" class="modal-avatar-lg" src="" alt="">
+                <div>
+                    <div class="modal-name" id="modal-name"></div>
+                    <div class="modal-sign" id="modal-sign"></div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="modal-section-label">人格特性</div>
+                    <div class="trait-chips" id="modal-traits"></div>
+                </div>
+                <div>
+                    <div class="modal-section-label">軍事專業職能</div>
+                    <div class="expertise-card">
+                        <div class="expertise-title" id="modal-role"></div>
+                        <div class="expertise-desc" id="modal-expertise"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-close-btn" id="modal-close-btn">關閉檔案</div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-pill">
+            <div class="ping-dot"></div>
+            <span class="footer-text">監控模式：同步全球軍事專家決策鏈</span>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://cuxrfgkhdrxdufrqefwb.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_meNQ3IeGb_B_my2WH5XjUw_6HbDgnCc';
+        const supabaseInstance = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const AVATAR_MAP = {
+            "牡羊座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aries.png",
+            "金牛座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Taurus.png",
+            "雙子座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Gemini.png",
+            "巨蟹座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Cancer.png",
+            "獅子座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Leo.png",
+            "處女座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Virgo.png",
+            "天秤座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Libra.png",
+            "天蠍座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Scorpio.png",
+            "射手座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Sagittarius.png",
+            "摩羯座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Capricorn.png",
+            "水瓶座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aquarius.png",
+            "雙魚座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Pisces.png",
+            "User": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/summer.png"
+        };
+
+        // Agent 人格特性與軍事職能資料庫（與 manager.js zodiacs 完全同步）
+        const AGENT_PROFILES = {
+            "牡羊座": {
+                sign: "Aries · 火象星座",
+                traits: ["行動派", "說話直接快速", "果敢衝勁", "第一手觀測", "突擊先鋒"],
+                role: "前沿武器系統 · 突擊戰術專家",
+                expertise: "行動派，說話直接快速。專注前沿武器系統、突擊戰術與第一手戰報觀測，擅長在瞬息萬變的前線環境中快速評估並做出決定。"
+            },
+            "金牛座": {
+                sign: "Taurus · 土象星座",
+                traits: ["務實穩重", "深層數據", "持久戰略", "資源管理", "補給專精"],
+                role: "軍事後勤補給 · 國防預算評估專家",
+                expertise: "務實穩重，專門挖掘深層數據。負責軍事後勤補給線規劃、國防預算評估與持久戰資源管理，確保戰略的長期可持續性。"
+            },
+            "雙子座": {
+                sign: "Gemini · 風象星座",
+                traits: ["情報靈敏", "多方訊息", "訊號情報", "心理戰", "電子對抗"],
+                role: "訊號情報(SIGINT) · 心理戰與電子干擾專家",
+                expertise: "情報靈敏，擅長處理多方訊息。專職訊號情報（SIGINT）蒐集、心理戰策劃與電子干擾對抗，能同時處理多源情報並快速交叉比對。"
+            },
+            "巨蟹座": {
+                sign: "Cancer · 水象星座",
+                traits: ["防禦心強", "重視安定", "本土防衛", "民防系統", "基地安全"],
+                role: "本土防禦佈署 · 民防與基地安全專家",
+                expertise: "防禦心強，重視內部安定。專責本土防禦佈署規劃、民防系統整合與軍事基地安全管理，確保後方穩固不受滲透威脅。"
+            },
+            "獅子座": {
+                sign: "Leo · 火象星座",
+                traits: ["領導力強", "宏觀權威", "聯合指揮", "戰略方向", "士氣鼓舞"],
+                role: "聯合指揮作戰 · 戰略方向制定專家",
+                expertise: "領導力強，注重宏觀權威。統籌聯合指揮作戰行動、制定整體戰略大方向並負責全軍士氣鼓舞，以強大個人魅力凝聚各部隊意志。"
+            },
+            "處女座": {
+                sign: "Virgo · 土象星座",
+                traits: ["極度細節", "完美主義", "精確測繪", "武器校準", "損害評估"],
+                role: "戰場精確測繪 · 精密武器校準與損害評估專家",
+                expertise: "極度細節導向，完美主義性格。負責戰場精確測繪、精密武器系統校準與戰後損害評估，以近乎零誤差的標準執行每一項任務。"
+            },
+            "天秤座": {
+                sign: "Libra · 風象星座",
+                traits: ["追求平衡", "外交後果", "停火協議", "多國協調", "聯盟談判"],
+                role: "軍事外交 · 停火協議與多國聯軍協調專家",
+                expertise: "追求平衡，考慮多方外交後果。主導軍事外交斡旋、停火協議談判與多國聯軍協調，優先評估外交解決途徑的可行性。"
+            },
+            "天蠍座": {
+                sign: "Scorpio · 水象星座",
+                traits: ["深沉冷酷", "秘密行動", "特種滲透", "敵後破壞", "高價值目標"],
+                role: "特種部隊滲透 · 敵後破壞與斬首行動專家",
+                expertise: "深沉冷酷，擅長秘密行動。專責特種部隊滲透任務、敵後破壞行動與高價值目標斬首作戰，能在極端壓力下執行高機密任務。"
+            },
+            "射手座": {
+                sign: "Sagittarius · 火象星座",
+                traits: ["遠見侵略性", "遠程打擊", "空軍戰略", "遠程偵察", "戰略佈署"],
+                role: "遠程導彈打擊 · 空軍戰略佈署與遠程偵察專家",
+                expertise: "遠見且具侵略性。專注遠程導彈打擊規劃、空軍戰略佈署與遠程偵察行動，以宏觀視野掌握廣域戰場態勢。"
+            },
+            "摩羯座": {
+                sign: "Capricorn · 土象星座",
+                traits: ["紀律嚴明", "階級架構", "軍事法規", "組織調整", "長期築壘"],
+                role: "軍事法規 · 組織架構調整與長期築壘防禦專家",
+                expertise: "紀律嚴明，重視階級與架構。負責軍事法規制定、組織架構調整優化與長期築壘防禦工事規劃，將戰略構想轉化為具體執行方案。"
+            },
+            "水瓶座": {
+                sign: "Aquarius · 風象星座",
+                traits: ["思考跳躍", "非對稱戰爭", "無人機蜂群", "AI軍事應用", "新興科技"],
+                role: "無人機蜂群戰術 · AI軍事應用與新興科技武器化專家",
+                expertise: "思考跳躍，擅長非對稱戰爭。主導無人機蜂群戰術研發、AI軍事應用整合與新興科技武器化，設計顛覆傳統的創新作戰方案。"
+            },
+            "雙魚座": {
+                sign: "Pisces · 水象星座",
+                traits: ["直覺敏銳", "隱形威脅", "潛艇反潛", "海洋情報", "虛假訊息識別"],
+                role: "潛艇反潛作戰 · 海洋情報與虛假訊息識別專家",
+                expertise: "直覺敏銳，觀察隱形威脅。專精潛艇反潛作戰規劃、海洋情報蒐集分析與虛假訊息識別，能在資訊迷霧中精準辨別真實威脅。"
+            }
+        };
+
+        // Modal 控制
+        function openModal(senderName, avatarSrc) {
+            const profile = AGENT_PROFILES[senderName];
+            if (!profile) return;
+
+            document.getElementById('modal-avatar').src = avatarSrc;
+            document.getElementById('modal-avatar').alt = senderName;
+            document.getElementById('modal-name').textContent = senderName;
+            document.getElementById('modal-sign').textContent = profile.sign;
+            document.getElementById('modal-role').textContent = profile.role;
+            document.getElementById('modal-expertise').textContent = profile.expertise;
+
+            const traitsEl = document.getElementById('modal-traits');
+            traitsEl.innerHTML = profile.traits.map(t => `<span class="trait-chip">${t}</span>`).join('');
+
+            const sheet = document.getElementById('modal-sheet');
+            sheet.classList.remove('closing');
+
+            const overlay = document.getElementById('agent-modal');
+            overlay.classList.add('active');
+        }
+
+        function closeModal() {
+            const sheet = document.getElementById('modal-sheet');
+            sheet.classList.add('closing');
+            setTimeout(() => {
+                document.getElementById('agent-modal').classList.remove('active');
+            }, 240);
+        }
+
+        // 初始化 Modal 關閉按鈕與背景點擊
+        document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+        document.getElementById('agent-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        async function syncCurrentManager() {
+            const { data } = await supabaseInstance
+                .from('messages')
+                .select('sender_name, content')
+                .eq('is_manager', true)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if (data && data.length > 0) updateManagerName(data[0]);
+            else document.getElementById('manager-name').innerText = "系統就緒";
+        }
+
+        function updateManagerName(msg) {
+            let name = msg.sender_name;
+            if (name === "System" && msg.content.includes('主持人已更換為')) {
+                const matched = msg.content.match(/「(.+?)」/);
+                if (matched) name = matched[1];
+            }
+            document.getElementById('manager-name').innerText = name;
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function renderMessage(msg) {
+            const chatBox = document.getElementById('chat-box');
+            if (msg.is_manager === true) updateManagerName(msg);
+
+            const isUser = msg.sender_name && msg.sender_name.toLowerCase().includes('user');
+            const avatarSrc = isUser
+                ? AVATAR_MAP["User"]
+                : (AVATAR_MAP[msg.sender_name] || msg.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(msg.sender_name)}`);
+
+            const time = new Date(msg.created_at).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+            const safeContent = escapeHtml(msg.content).replace(/\n/g, '<br>');
+            const safeName = escapeHtml(msg.sender_name || '');
+            const hasProfile = !isUser && AGENT_PROFILES[msg.sender_name];
+            const avatarClick = hasProfile
+                ? `onclick="openModal('${msg.sender_name.replace(/'/g, "\\'")}', '${avatarSrc}')" title="${msg.sender_name} 檔案"`
+                : '';
+
+            const pdfHtml = msg.file_url ? `
+                <div class="pdf-attach">
+                    <a href="${escapeHtml(msg.file_url)}" target="_blank" class="pdf-link">
+                        <div class="pdf-icon">PDF</div>
+                        <div>
+                            <div class="pdf-info-title">軍事研討·戰術報告</div>
+                            <div class="pdf-info-sub">Strategy Report</div>
+                        </div>
+                    </a>
+                </div>` : '';
+
+            const html = isUser ? `
+                <div class="msg-group user animate-in">
+                    <div class="msg-content-wrap">
+                        <div class="msg-meta">
+                            <span class="msg-name">${safeName}</span>
+                            <span class="msg-dot"></span>
+                            <span class="msg-time">${time}</span>
+                        </div>
+                        <div class="bubble bubble-user">${safeContent}${pdfHtml}</div>
+                    </div>
+                    <img src="${avatarSrc}" class="agent-avatar" alt="user" loading="lazy">
+                </div>` : `
+                <div class="msg-group agent animate-in">
+                    <img src="${avatarSrc}" class="agent-avatar" ${avatarClick} alt="${safeName}" loading="lazy">
+                    <div class="msg-content-wrap">
+                        <div class="msg-meta">
+                            <span class="msg-name">${safeName}</span>
+                            <span class="msg-dot"></span>
+                            <span class="msg-time">${time}</span>
+                        </div>
+                        <div class="bubble bubble-agent">${safeContent}${pdfHtml}</div>
+                    </div>
+                </div>`;
+
+            chatBox.insertAdjacentHTML('beforeend', html);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function fetchHistory() {
+            const { data } = await supabaseInstance
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(50);
+            if (data) data.forEach(msg => renderMessage(msg));
+        }
+
+        function subscribeToMessages() {
+            supabaseInstance
+                .channel('public:messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    renderMessage(payload.new);
+                })
+                .subscribe();
+        }
+
+        window.addEventListener('load', () => {
+            fetchHistory();
+            syncCurrentManager();
+            subscribeToMessages();
+        });
+    </script>
+</body>
+</html>
