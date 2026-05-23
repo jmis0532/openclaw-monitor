@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CODA">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#5a7bbf">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logo.png">
     <title>CODA Agent 監控中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -23,9 +26,11 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html {
             height: 100%;
-            height: -webkit-fill-available;
+        }
+
+        html, body {
             overflow: hidden;
             overscroll-behavior: none;
         }
@@ -53,10 +58,14 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
-            background: rgba(255,255,255,0.08);
+            background: rgba(70, 100, 160, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 0.5px solid rgba(255,255,255,0.15);
+        }
+
+        @supports not (backdrop-filter: blur(1px)) {
+            .app-header { background: rgba(60, 90, 150, 0.97); }
         }
 
         .logo-block {
@@ -194,12 +203,18 @@
             border-radius: 18px 4px 18px 18px;
         }
         .bubble-agent {
-            background: rgba(0,0,0,0.22);
+            background: rgba(30, 50, 90, 0.75);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             color: #fff;
             border: 0.5px solid rgba(255,255,255,0.12);
             border-radius: 4px 18px 18px 18px;
+        }
+
+        @supports not (backdrop-filter: blur(1px)) {
+            .bubble-agent {
+                background: rgba(30, 50, 90, 0.92);
+            }
         }
 
         /* PDF attachment */
