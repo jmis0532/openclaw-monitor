@@ -21,7 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* ══════════════════════════════════════
-           響應式變數：手機 / 平板 / 電腦
+           響應式變數：完美復刻 LINE 聊天室比例
            ══════════════════════════════════════ */
         :root {
             --safe-top:    env(safe-area-inset-top, 0px);
@@ -29,21 +29,21 @@
             --safe-left:   env(safe-area-inset-left, 0px);
             --safe-right:  env(safe-area-inset-right, 0px);
 
-            /* 手機預設 (< 600px) */
+            /* 【手機預設 (< 600px) - 完美復刻 LINE 比例】 */
             --body-max:  100%;
-            --av:        38px;   /* 頭像 */
-            --bf:        15px;   /* 氣泡字體 */
-            --bp:        10px 13px;
-            --nf:        11px;   /* 名稱 */
-            --tf:        10px;   /* 時間 */
-            --cp:        10px 12px 12px;
-            --mg:        8px;
-            --mb:        14px;
+            --av:        40px;          /* LINE 標準頭像大小 */
+            --bf:        16px;          /* LINE 預設對話文字大小 (偏大且清晰) */
+            --bp:        9px 12px;      /* LINE 氣泡內邊距 */
+            --nf:        12px;          /* 名稱字體大小 */
+            --tf:        11px;          /* 時間字體大小 */
+            --cp:        14px 14px;     /* 聊天室兩側留白 */
+            --mg:        8px;           /* 頭像與氣泡的間距 */
+            --mb:        14px;          /* 訊息與訊息之間的間距 */
             --hp:        10px 14px 8px;
-            --ls:        36px;   /* logo */
-            --hf:        14px;   /* header 標題 */
+            --ls:        36px;   
+            --hf:        15px;   
             --fp:        8px 14px 10px;
-            --cw:        80%;    /* 氣泡最大寬 */
+            --cw:        75%;           /* LINE 氣泡最大寬度比例 */
             --modal-max: 100%;
         }
 
@@ -98,15 +98,13 @@
 
         html {
             height: 100%;
-            background: #4a6aa0; /* 電腦兩側背景 */
+            background: #4a6aa0; 
         }
 
         body {
-            /* 高度：JS 注入 --vh，保證 HTTP/HTTPS 一致 */
             height: var(--vh, 100vh);
             overflow: hidden;
             overscroll-behavior: none;
-            /* 響應式置中容器 */
             width: 100%;
             max-width: var(--body-max);
             margin: 0 auto;
@@ -220,7 +218,7 @@
             min-width: var(--av) !important;
             border-radius: 50% !important;
             object-fit: cover !important;
-            border: 1.5px solid rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.15); /* 微調邊框厚度 */
             margin-top: 2px;
             flex-shrink: 0;
         }
@@ -243,9 +241,9 @@
         .msg-name {
             font-size: var(--nf);
             font-weight: 700;
-            color: rgba(255,255,255,0.55);
+            color: rgba(255,255,255,0.6);
             text-transform: uppercase;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.05em;
         }
         .msg-dot {
             width: 2px;
@@ -255,14 +253,14 @@
         }
         .msg-time {
             font-size: var(--tf);
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.35);
             font-weight: 600;
         }
 
-        /* ══ 氣泡 ══ */
+        /* ══ 氣泡（完美還原 LINE 圓角結構與行高） ══ */
         .bubble {
             padding: var(--bp);
-            line-height: 1.55;
+            line-height: 1.6; /* 調整為 LINE 般的舒適行高 */
             font-size: var(--bf);
             font-weight: 400;
             word-break: break-word;
@@ -270,7 +268,7 @@
         .bubble-user {
             background: #fff;
             color: #1a2b4b;
-            border-radius: 18px 4px 18px 18px;
+            border-radius: 16px; /* 使用更柔和的 LINE 風格圓角 */
         }
         .bubble-agent {
             background: rgba(0,0,0,0.22);
@@ -278,7 +276,7 @@
             -webkit-backdrop-filter: blur(12px);
             color: #fff;
             border: 0.5px solid rgba(255,255,255,0.12);
-            border-radius: 4px 18px 18px 18px;
+            border-radius: 16px; /* 使用更柔和的 LINE 風格圓角 */
         }
 
         /* ══ PDF 附件 ══ */
@@ -549,7 +547,6 @@
 
     <main id="chat-box"></main>
 
-    <!-- Agent Profile Modal -->
     <div class="modal-overlay" id="agent-modal">
         <div class="modal-sheet" id="modal-sheet">
             <div class="modal-handle"></div>
@@ -605,7 +602,6 @@
             "User": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/summer.png"
         };
 
-        // Agent 人格特性與軍事職能資料庫（與 manager.js zodiacs 完全同步）
         const AGENT_PROFILES = {
             "牡羊座": {
                 sign: "Aries · 火象星座",
@@ -681,7 +677,6 @@
             }
         };
 
-        // Modal 控制
         function openModal(senderName, avatarSrc) {
             const profile = AGENT_PROFILES[senderName];
             if (!profile) return;
@@ -711,7 +706,6 @@
             }, 240);
         }
 
-        // 初始化 Modal 關閉按鈕與背景點擊
         document.getElementById('modal-close-btn').addEventListener('click', closeModal);
         document.getElementById('agent-modal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
