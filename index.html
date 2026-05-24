@@ -804,9 +804,9 @@
             const { data } = await supabaseInstance
                 .from('messages')
                 .select('*')
-                .order('created_at', { ascending: true })
-                .limit(50);
-            if (data) data.forEach(msg => renderMessage(msg));
+                .order('created_at', { ascending: false })
+                .limit(500);
+            if (data) data.reverse().forEach(msg => renderMessage(msg));
         }
 
         function subscribeToMessages() {
