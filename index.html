@@ -753,37 +753,42 @@
             else document.getElementById('manager-name').innerText = "系統就緒";
         }
 
-        function isRedTeamMessage(msg) {
-            const content = `${msg.sender_name || ''}\n${msg.content || ''}`;
-            return /紅隊演練|紅色演練|紅隊觀察|紅隊切入點|REDTEAM|red team/i.test(content);
-        }
-
-        function isRedTeamChoicePrompt(msg) {
-            const content = msg.content || '';
-            return msg.is_manager === true &&
-                /下一步|接下來|選項/.test(content) &&
-                /下一輪紅隊演練/.test(content) &&
-                /PDF/i.test(content) &&
-                /PPT/i.test(content) &&
-                /結束/.test(content);
-        }
-
-        function isModeExitCommand(msg) {
-            const content = (msg.content || '').trim();
-            const isUser = msg.sender_name && msg.sender_name.toLowerCase().includes('user');
-            return isUser && /^(PDF|pdf|PPT|ppt|結束|結束紅隊演練|結束演練|下一輪紅隊演練|下一輪|再一輪|繼續)$/.test(content);
-        }
-
-        function setOperationMode(mode) {
+        function setOperationMode(mode, topic = '') {
             const badge = document.getElementById('mode-badge');
             if (!badge) return;
 
             if (mode === 'redteam') {
                 badge.textContent = '紅隊演練';
+                badge.title = topic ? `紅隊演練：${topic}` : '紅隊演練';
                 badge.classList.add('active', 'redteam');
             } else {
+                badge.title = '';
                 badge.classList.remove('active', 'redteam');
             }
+        }
+
+        function updateOperationModeFromSession(session) {
+            if (session && session.is_redteam_active === true) {
+                setOperationMode('redteam', session.redteam_topic || session.task_goal || '');
+            } else {
+                setOperationMode(null);
+            }
+        }
+
+        async function syncOperationMode() {
+            const { data, error } = await supabaseInstance
+                .from('sessions')
+                .select('id, is_redteam_active, redteam_topic, task_goal')
+                .eq('id', 'current')
+                .maybeSingle();
+
+            if (error) {
+                console.warn('無法讀取紅隊演練狀態，請確認 sessions 已新增 is_redteam_active / redteam_topic 欄位。', error.message);
+                setOperationMode(null);
+                return;
+            }
+
+            updateOperationModeFromSession(data);
         }
 
         function updateManagerName(msg) {
@@ -806,11 +811,6 @@
         function renderMessage(msg) {
             const chatBox = document.getElementById('chat-box');
             if (msg.is_manager === true) updateManagerName(msg);
-            if (isRedTeamChoicePrompt(msg) || isModeExitCommand(msg)) {
-                setOperationMode(null);
-            } else if (isRedTeamMessage(msg)) {
-                setOperationMode('redteam');
-            }
 
             const isUser = msg.sender_name && msg.sender_name.toLowerCase().includes('user');
             const avatarSrc = isUser
@@ -882,10 +882,21 @@
                 .subscribe();
         }
 
+        function subscribeToSession() {
+            supabaseInstance
+                .channel('public:sessions')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: 'id=eq.current' }, payload => {
+                    updateOperationModeFromSession(payload.new);
+                })
+                .subscribe();
+        }
+
         window.addEventListener('load', () => {
             fetchHistory();
             syncCurrentManager();
+            syncOperationMode();
             subscribeToMessages();
+            subscribeToSession();
         });
     </script>
 </body>
