@@ -159,6 +159,29 @@
             letter-spacing: -0.5px;
         }
 
+        .mode-badge {
+            min-height: var(--ls);
+            padding: 0 11px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 12px;
+            border: 0.5px solid rgba(255,255,255,0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+        }
+
+        .mode-badge.active { display: flex; }
+        .mode-badge.redteam {
+            background: rgba(185, 28, 28, 0.42);
+            border-color: rgba(254, 202, 202, 0.48);
+        }
+
         .header-info { margin-left: 10px; }
         .header-title {
             color: #fff;
@@ -533,8 +556,11 @@
 
     <header class="app-header" style="position:relative;">
         <div style="display:flex;align-items:center;">
-            <div class="logo-block">
-                <span class="logo-text">CODA</span>
+            <div style="display:flex;align-items:center;gap:7px;">
+                <div class="logo-block">
+                    <span class="logo-text">CODA</span>
+                </div>
+                <div class="mode-badge redteam" id="mode-badge">紅隊演練</div>
             </div>
             <div class="header-info" style="display:flex;flex-direction:column;align-items:center;">
                 <img src="logo.png" alt="UAV Logo" style="height:28px;width:auto;object-fit:contain;display:block;margin-bottom:2px;">
@@ -727,6 +753,23 @@
             else document.getElementById('manager-name').innerText = "系統就緒";
         }
 
+        function isRedTeamMessage(msg) {
+            const content = `${msg.sender_name || ''}\n${msg.content || ''}`;
+            return /紅隊演練|紅色演練|紅隊觀察|紅隊切入點|REDTEAM|red team/i.test(content);
+        }
+
+        function setOperationMode(mode) {
+            const badge = document.getElementById('mode-badge');
+            if (!badge) return;
+
+            if (mode === 'redteam') {
+                badge.textContent = '紅隊演練';
+                badge.classList.add('active', 'redteam');
+            } else {
+                badge.classList.remove('active', 'redteam');
+            }
+        }
+
         function updateManagerName(msg) {
             let name = msg.sender_name;
             if (name === "System" && msg.content.includes('主持人已更換為')) {
@@ -747,6 +790,7 @@
         function renderMessage(msg) {
             const chatBox = document.getElementById('chat-box');
             if (msg.is_manager === true) updateManagerName(msg);
+            if (isRedTeamMessage(msg)) setOperationMode('redteam');
 
             const isUser = msg.sender_name && msg.sender_name.toLowerCase().includes('user');
             const avatarSrc = isUser
