@@ -878,6 +878,7 @@
                 .channel('public:messages')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                     renderMessage(payload.new);
+                    syncOperationMode();
                 })
                 .subscribe();
         }
