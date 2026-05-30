@@ -606,7 +606,7 @@
     <footer class="app-footer">
         <div class="footer-pill">
             <div class="ping-dot"></div>
-            <span class="footer-text">監控模式：同步全球軍事專家決策鏈</span>
+            <span class="footer-text" id="key-speaker-text">關鍵第十人:待定</span>
             <div class="mode-badge redteam" id="mode-badge">紅隊演練</div>
         </div>
     </footer>
@@ -766,7 +766,14 @@
             }
         }
 
+        function setKeySpeaker(name) {
+            const el = document.getElementById('key-speaker-text');
+            if (!el) return;
+            el.textContent = `關鍵第十人:${name || '待定'}`;
+        }
+
         function updateOperationModeFromSession(session) {
+            setKeySpeaker(session ? session.key_speaker_name : null);
             if (session && session.is_redteam_active === true) {
                 setOperationMode('redteam', session.redteam_topic || session.task_goal || '');
             } else {
@@ -777,7 +784,7 @@
         async function syncOperationMode() {
             const { data, error } = await supabaseInstance
                 .from('sessions')
-                .select('id, is_redteam_active, redteam_topic, task_goal')
+                .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name')
                 .eq('id', 'current')
                 .maybeSingle();
 
