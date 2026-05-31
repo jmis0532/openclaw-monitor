@@ -1025,6 +1025,10 @@
             supabaseInstance
                 .channel('public:messages')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    if (isCanarySignal(payload.new)) {
+                        handleCanarySignal(payload.new);
+                        return;
+                    }
                     renderMessage(payload.new);
                     syncOperationMode();
                 })
