@@ -887,17 +887,19 @@
 
         function updateOperationModeFromSession(session) {
             setKeySpeaker(session ? session.key_speaker_name : null);
-            setCanaryDetection(
-                session && session.canary_active === true,
-                session && session.canary_active === true
-                    ? [
-                        `level=${session.canary_level || ''}`,
-                        `subject=${session.canary_subject || ''}`,
-                        `action=${session.canary_action || ''}`,
-                        session.canary_reason || ''
-                    ].filter(Boolean).join(' | ')
-                    : ''
-            );
+            if (session && Object.prototype.hasOwnProperty.call(session, 'canary_active')) {
+                setCanaryDetection(
+                    session.canary_active === true,
+                    session.canary_active === true
+                        ? [
+                            `level=${session.canary_level || ''}`,
+                            `subject=${session.canary_subject || ''}`,
+                            `action=${session.canary_action || ''}`,
+                            session.canary_reason || ''
+                        ].filter(Boolean).join(' | ')
+                        : ''
+                );
+            }
             if (session && session.is_redteam_active === true) {
                 setOperationMode('redteam', session.redteam_topic || session.task_goal || '');
             } else {
