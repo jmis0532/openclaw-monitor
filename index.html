@@ -181,6 +181,11 @@
             background: rgba(185, 28, 28, 0.42);
             border-color: rgba(254, 202, 202, 0.48);
         }
+        .mode-badge.canary {
+            background: rgba(234, 179, 8, 0.42);
+            border-color: rgba(254, 240, 138, 0.62);
+            color: #fff7c2;
+        }
 
         .header-info { margin-left: 10px; }
         .header-title {
@@ -608,6 +613,7 @@
             <div class="ping-dot"></div>
             <span class="footer-text" id="key-speaker-text">關鍵第十人:待定</span>
             <div class="mode-badge redteam" id="mode-badge">紅隊演練</div>
+            <div class="mode-badge canary" id="canary-badge">金絲雀偵測</div>
         </div>
     </footer>
 
@@ -615,6 +621,7 @@
         const SUPABASE_URL = 'https://cuxrfgkhdrxdufrqefwb.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_meNQ3IeGb_B_my2WH5XjUw_6HbDgnCc';
         const supabaseInstance = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const CANARY_SIGNAL_PREFIX = '[CANARY]';
 
         const AVATAR_MAP = {
             "牡羊座": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/Aries.png",
@@ -632,7 +639,7 @@
             "User": "https://cuxrfgkhdrxdufrqefwb.supabase.co/storage/v1/object/public/avatars/summer.png"
         };
 
-        const AGENT_PROFILES = {
+        const AGENT_PROFILES_LEGACY = {
             "牡羊座": {
                 sign: "Aries · 火象星座",
                 traits: ["反應快", "直覺強", "搶主動權", "重視勝負", "容易急躁"],
@@ -707,6 +714,81 @@
             }
         };
 
+        const AGENT_PROFILES = {
+            "牡羊座": {
+                sign: "Aries · 火象星座",
+                traits: ["快速決斷", "火力分配", "攔截優先序", "交戰節奏", "前沿反應"],
+                role: "CODA 功能型參謀 · 防空火力與攔截戰術 Agent",
+                expertise: "評估飛彈、火箭、無人機等來襲威脅，提出攔截優先序、火力配置、交戰窗口與飽和攻擊下的應對節奏。"
+            },
+            "金牛座": {
+                sign: "Taurus · 土象星座",
+                traits: ["穩健務實", "資源控管", "彈藥消耗", "補給韌性", "成本效益"],
+                role: "CODA 功能型參謀 · 後勤補給與彈藥消耗 Agent",
+                expertise: "分析攔截彈庫存、補給週期、消耗率、戰備成本與長時間防空作戰的續戰力限制。"
+            },
+            "雙子座": {
+                sign: "Gemini · 風象星座",
+                traits: ["資訊敏捷", "鏈路分析", "電子戰", "資安韌性", "備援思維"],
+                role: "CODA 功能型參謀 · 通資電與電子戰 Agent",
+                expertise: "評估 IBCS 通訊鏈路、資料交換、SIGINT、電子干擾、欺敵訊號、網路攻擊防護與備援通訊方案。"
+            },
+            "巨蟹座": {
+                sign: "Cancer · 水象星座",
+                traits: ["防護導向", "民防協調", "後方韌性", "節點保護", "損害控管"],
+                role: "CODA 功能型參謀 · 本土防衛與關鍵基礎設施 Agent",
+                expertise: "分析機場、港口、電力、通訊、指揮所與民防節點的防護優先順序，維持本土防空最低運作能力。"
+            },
+            "獅子座": {
+                sign: "Leo · 火象星座",
+                traits: ["指揮整合", "跨軍種協調", "決心建議", "戰場圖像", "簡報敘事"],
+                role: "CODA 功能型參謀 · 聯合指揮與決策整合 Agent",
+                expertise: "統整跨軍種意見、共同作戰圖像與指揮官決心建議，將分散分析收束為可報告、可執行的作戰選項。"
+            },
+            "處女座": {
+                sign: "Virgo · 土象星座",
+                traits: ["精密校驗", "感測融合", "軌跡判讀", "證據導向", "戰損評估"],
+                role: "CODA 功能型參謀 · 感測器融合與戰損評估 Agent",
+                expertise: "整合雷達、光電與 ISR 資料，判斷目標軌跡、識別可信度、攔截成效與 BDA 戰損評估。"
+            },
+            "天秤座": {
+                sign: "Libra · 風象星座",
+                traits: ["平衡判斷", "ROE", "盟軍協調", "升高管理", "共識彙整"],
+                role: "CODA 功能型參謀 · 交戰規則與共識整合 Agent",
+                expertise: "評估交戰規則、誤擊風險、盟軍協調、軍事外交與區域升高風險，彙整多 Agent 分歧形成共識建議。"
+            },
+            "天蠍座": {
+                sign: "Scorpio · 水象星座",
+                traits: ["精準反制", "關鍵弱點", "發射鏈分析", "隱蔽行動", "風險控管"],
+                role: "CODA 功能型參謀 · 高價值目標與反制行動 Agent",
+                expertise: "分析敵方發射源、指管節點、特戰滲透、反制行動與斬首行動可行性，尋找破壞敵攻擊鏈的關鍵點。"
+            },
+            "射手座": {
+                sign: "Sagittarius · 火象星座",
+                traits: ["縱深視野", "空域運用", "遠程打擊", "空軍部署", "戰役連動"],
+                role: "CODA 功能型參謀 · 遠程打擊與空中兵力 Agent",
+                expertise: "評估空軍部署、防區外打擊、敵方發射平台壓制、空域規劃與 IBCS 防空作戰的戰役層次連動。"
+            },
+            "摩羯座": {
+                sign: "Capricorn · 土象星座",
+                traits: ["制度落地", "SOP", "權責分工", "訓練規劃", "組織架構"],
+                role: "CODA 功能型參謀 · 組織編制與作戰流程 Agent",
+                expertise: "設計 IBCS 導入後的指揮架構、權責分工、SOP、訓練制度、軍法限制與組織調整期程。"
+            },
+            "水瓶座": {
+                sign: "Aquarius · 風象星座",
+                traits: ["前瞻創新", "AI 決策", "無人系統", "自動化排序", "人機協同"],
+                role: "CODA 功能型參謀 · 無人系統與 AI 決策 Agent",
+                expertise: "研究 AI 輔助威脅排序、無人機蜂群反制、自動化建議、人機協同與哪些節點必須保留人類決策。"
+            },
+            "雙魚座": {
+                sign: "Pisces · 水象星座",
+                traits: ["欺敵識別", "認知作戰", "資訊可信度", "假目標", "誤判提醒"],
+                role: "CODA 功能型參謀 · 認知作戰與欺敵識別 Agent",
+                expertise: "分析假目標、假訊號、資訊戰、心理戰，以及 AI 判讀遭欺騙、資料污染或產生幻覺的風險。"
+            }
+        };
+
         function openModal(senderName, avatarSrc) {
             const profile = AGENT_PROFILES[senderName];
             if (!profile) return;
@@ -766,6 +848,37 @@
             }
         }
 
+        function setCanaryDetection(active, detail = '') {
+            const badge = document.getElementById('canary-badge');
+            if (!badge) return;
+
+            if (active) {
+                badge.textContent = '金絲雀偵測';
+                badge.title = detail || '已觸發金絲雀偵測';
+                badge.classList.add('active');
+            } else {
+                badge.title = '';
+                badge.classList.remove('active');
+            }
+        }
+
+        function isCanarySignal(msg) {
+            return msg
+                && msg.is_internal === true
+                && msg.sender_name === 'Canary Sentinel'
+                && typeof msg.content === 'string'
+                && msg.content.startsWith(CANARY_SIGNAL_PREFIX);
+        }
+
+        function handleCanarySignal(msg) {
+            const detail = msg.content
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean)
+                .join(' | ');
+            setCanaryDetection(true, detail);
+        }
+
         function setKeySpeaker(name) {
             const el = document.getElementById('key-speaker-text');
             if (!el) return;
@@ -774,6 +887,17 @@
 
         function updateOperationModeFromSession(session) {
             setKeySpeaker(session ? session.key_speaker_name : null);
+            setCanaryDetection(
+                session && session.canary_active === true,
+                session && session.canary_active === true
+                    ? [
+                        `level=${session.canary_level || ''}`,
+                        `subject=${session.canary_subject || ''}`,
+                        `action=${session.canary_action || ''}`,
+                        session.canary_reason || ''
+                    ].filter(Boolean).join(' | ')
+                    : ''
+            );
             if (session && session.is_redteam_active === true) {
                 setOperationMode('redteam', session.redteam_topic || session.task_goal || '');
             } else {
@@ -784,13 +908,25 @@
         async function syncOperationMode() {
             const { data, error } = await supabaseInstance
                 .from('sessions')
-                .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name')
+                .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name, canary_active, canary_level, canary_subject, canary_reason, canary_action, canary_updated_at')
                 .eq('id', 'current')
                 .maybeSingle();
 
             if (error) {
                 console.warn('無法讀取紅隊演練狀態，請確認 sessions 已新增 is_redteam_active / redteam_topic 欄位。', error.message);
+                const fallback = await supabaseInstance
+                    .from('sessions')
+                    .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name')
+                    .eq('id', 'current')
+                    .maybeSingle();
+
+                if (!fallback.error) {
+                    updateOperationModeFromSession(fallback.data);
+                    return;
+                }
+
                 setOperationMode(null);
+                setCanaryDetection(false);
                 return;
             }
 
@@ -816,6 +952,10 @@
 
         function renderMessage(msg) {
             const chatBox = document.getElementById('chat-box');
+            if (isCanarySignal(msg)) {
+                handleCanarySignal(msg);
+                return;
+            }
             if (msg.is_manager === true) updateManagerName(msg);
 
             const isUser = msg.sender_name && msg.sender_name.toLowerCase().includes('user');
