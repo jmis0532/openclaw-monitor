@@ -863,15 +863,16 @@
         }
 
         function isCanarySignal(msg) {
-            return msg
-                && msg.is_internal === true
-                && msg.sender_name === 'Canary Sentinel'
-                && typeof msg.content === 'string'
-                && msg.content.startsWith(CANARY_SIGNAL_PREFIX);
+            if (!msg) return false;
+            const sender = String(msg.sender_name || '');
+            const content = String(msg.content || '');
+            return sender === 'Canary Sentinel'
+                || content.startsWith(CANARY_SIGNAL_PREFIX)
+                || content.includes('金絲雀偵測');
         }
 
         function handleCanarySignal(msg) {
-            const detail = msg.content
+            const detail = String(msg.content || '金絲雀偵測')
                 .split('\n')
                 .map(line => line.trim())
                 .filter(Boolean)
