@@ -955,7 +955,7 @@
                 console.warn('無法讀取紅隊演練狀態，請確認 sessions 已新增 is_redteam_active / redteam_topic 欄位。', error.message);
                 const fallback = await supabaseInstance
                     .from('sessions')
-                    .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name')
+                    .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name, tenth_man_active, tenth_man_speaker')
                     .eq('id', 'current')
                     .maybeSingle();
 
