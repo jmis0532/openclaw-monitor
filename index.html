@@ -888,13 +888,15 @@
 
         function setKeySpeaker(name) {
             const el = document.getElementById('key-speaker-text');
-            const badge = document.getElementById('tenth-badge');
             if (el) el.textContent = `關鍵第十人:${name || '待定'}`;
+        }
 
+        function setTenthManPrinciple(active, speaker = '') {
+            const badge = document.getElementById('tenth-badge');
             if (!badge) return;
-            if (name) {
+            if (active) {
                 badge.textContent = '第十人原則';
-                badge.title = `關鍵第十人：${name}`;
+                badge.title = speaker ? `第十人原則：${speaker}` : '第十人原則';
                 badge.classList.add('active');
             } else {
                 badge.title = '';
@@ -902,8 +904,26 @@
             }
         }
 
+        function isTenthManSignal(msg) {
+            if (!msg) return false;
+            const sender = String(msg.sender_name || '');
+            const content = String(msg.content || '');
+            return sender === 'Tenth Man Sentinel' || content.startsWith('[TENTH_MAN]');
+        }
+
+        function handleTenthManSignal(msg) {
+            const content = String(msg.content || '');
+            const speakerLine = content.split('\n').find(line => line.startsWith('speaker='));
+            const speaker = speakerLine ? speakerLine.replace('speaker=', '').trim() : '';
+            setTenthManPrinciple(true, speaker);
+        }
+
         function updateOperationModeFromSession(session) {
             setKeySpeaker(session ? session.key_speaker_name : null);
+            setTenthManPrinciple(
+                session && session.tenth_man_active === true,
+                session ? (session.tenth_man_speaker || session.key_speaker_name || '') : ''
+            );
             if (session && Object.prototype.hasOwnProperty.call(session, 'canary_active')) {
                 setCanaryDetection(
                     session.canary_active === true,
@@ -927,7 +947,7 @@
         async function syncOperationMode() {
             const { data, error } = await supabaseInstance
                 .from('sessions')
-                .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name, canary_active, canary_level, canary_subject, canary_reason, canary_action, canary_updated_at')
+                .select('id, is_redteam_active, redteam_topic, task_goal, key_speaker_name, tenth_man_active, tenth_man_speaker, canary_active, canary_level, canary_subject, canary_reason, canary_action, canary_updated_at')
                 .eq('id', 'current')
                 .maybeSingle();
 
@@ -947,6 +967,7 @@
                 setOperationMode(null);
                 setCanaryDetection(false);
                 setKeySpeaker(null);
+                setTenthManPrinciple(false);
                 return;
             }
 
@@ -974,6 +995,10 @@
             const chatBox = document.getElementById('chat-box');
             if (isCanarySignal(msg)) {
                 handleCanarySignal(msg);
+                return;
+            }
+            if (isTenthManSignal(msg)) {
+                handleTenthManSignal(msg);
                 return;
             }
             if (msg.is_manager === true) updateManagerName(msg);
@@ -1045,6 +1070,10 @@
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                     if (isCanarySignal(payload.new)) {
                         handleCanarySignal(payload.new);
+                        return;
+                    }
+                    if (isTenthManSignal(payload.new)) {
+                        handleTenthManSignal(payload.new);
                         return;
                     }
                     renderMessage(payload.new);
