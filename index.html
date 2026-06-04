@@ -544,6 +544,29 @@
             color: rgba(255,255,255,0.5);
             line-height: 1.55;
         }
+        .capability-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .capability-card {
+            background: rgba(255,255,255,0.055);
+            border: 0.5px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .capability-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.82);
+            margin-bottom: 5px;
+        }
+        .capability-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.56);
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
 
         .modal-close-btn {
             margin: 0 20px 16px;
@@ -602,10 +625,24 @@
                     <div class="trait-chips" id="modal-traits"></div>
                 </div>
                 <div>
-                    <div class="modal-section-label">軍事專業職能</div>
-                    <div class="expertise-card">
-                        <div class="expertise-title" id="modal-role"></div>
-                        <div class="expertise-desc" id="modal-expertise"></div>
+                    <div class="modal-section-label">能力分層</div>
+                    <div class="capability-stack">
+                        <div class="capability-card">
+                            <div class="capability-title">共通軍事職能</div>
+                            <div class="capability-desc" id="modal-common"></div>
+                        </div>
+                        <div class="capability-card">
+                            <div class="capability-title">鄰近軍事領域</div>
+                            <div class="capability-desc" id="modal-adjacent"></div>
+                        </div>
+                        <div class="capability-card">
+                            <div class="capability-title">專業軍事職能</div>
+                            <div class="capability-desc" id="modal-primary"></div>
+                        </div>
+                        <div class="expertise-card">
+                            <div class="expertise-title" id="modal-role"></div>
+                            <div class="expertise-desc" id="modal-expertise"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -720,103 +757,103 @@
             }
         };
 
-        const SHARED_FOUNDATION_LABEL = "共同軍事基礎：防空作戰、IBCS 概念、敵我識別、威脅評估、交戰規則、感測器與武器鏈結、基本戰術流程。";
+        const SHARED_FOUNDATION_LABEL = "防空作戰、IBCS 概念、敵我識別、威脅評估、交戰規則、感測器與武器鏈結、基本戰術流程。";
 
         const AGENT_PROFILES = {
             "牡羊座": {
                 sign: "Aries · 火象星座",
                 traits: ["反應快", "直覺強", "搶主動權", "重視勝負", "容易急躁"],
                 role: "CODA 功能型參謀 · 防空火力與攔截戰術 Agent",
-                primary: "主專業：武器分配、攔截器選擇、火力分派、交戰窗口。",
-                adjacent: "鄰近理解：威脅等級、彈藥存量、ROE、感測器回報可信度。",
+                primary: "武器分配、攔截器選擇、火力分派、交戰窗口。",
+                adjacent: "威脅等級、彈藥存量、ROE、感測器回報可信度。",
                 expertise: "評估飛彈、火箭、無人機等來襲威脅，提出攔截優先序、火力配置、交戰窗口與飽和攻擊下的應對節奏。"
             },
             "金牛座": {
                 sign: "Taurus · 土象星座",
                 traits: ["穩定", "務實", "重承受力", "慢熱", "放大風險"],
                 role: "CODA 功能型參謀 · 後勤補給與彈藥消耗 Agent",
-                primary: "主專業：攔截彈庫存、補給週期、消耗率、維修週期、戰備成本。",
-                adjacent: "鄰近理解：武器分配、威脅排序、採購治理、長期防空作戰節奏。",
+                primary: "攔截彈庫存、補給週期、消耗率、維修週期、戰備成本。",
+                adjacent: "武器分配、威脅排序、採購治理、長期防空作戰節奏。",
                 expertise: "分析攔截彈庫存、補給週期、消耗率、戰備成本與長時間防空作戰的續戰力限制。"
             },
             "雙子座": {
                 sign: "Gemini · 風象星座",
                 traits: ["好奇", "語感敏銳", "多角度", "切換快速", "結論跳躍"],
                 role: "CODA 功能型參謀 · 通資電與電子戰 Agent",
-                primary: "主專業：電子戰、干擾、欺敵、誘標、SIGINT、通訊節點與資安韌性。",
-                adjacent: "鄰近理解：感測器融合、資料鏈、威脅評估、AI 判讀遭欺騙風險。",
+                primary: "電子戰、干擾、欺敵、誘標、SIGINT、通訊節點與資安韌性。",
+                adjacent: "感測器融合、資料鏈、威脅評估、AI 判讀遭欺騙風險。",
                 expertise: "評估 IBCS 通訊鏈路、資料交換、SIGINT、電子干擾、欺敵訊號、網路攻擊防護與備援通訊方案。"
             },
             "巨蟹座": {
                 sign: "Cancer · 水象星座",
                 traits: ["保護型", "記憶感強", "重歸屬", "安全邊界", "易防衛"],
                 role: "CODA 功能型參謀 · 本土防衛與關鍵基礎設施 Agent",
-                primary: "主專業：基地、機場、港口、電力、通訊、民防節點防護。",
-                adjacent: "鄰近理解：威脅排序、後勤韌性、ROE 下的民用風險、災損控管。",
+                primary: "基地、機場、港口、電力、通訊、民防節點防護。",
+                adjacent: "威脅排序、後勤韌性、ROE 下的民用風險、災損控管。",
                 expertise: "分析機場、港口、電力、通訊、指揮所與民防節點的防護優先順序，維持本土防空最低運作能力。"
             },
             "獅子座": {
                 sign: "Leo · 火象星座",
                 traits: ["自信", "外放", "重尊嚴", "凝聚方向", "權威敏感"],
                 role: "CODA 功能型參謀 · 聯合指揮與決策整合 Agent",
-                primary: "主專業：威脅評估、目標分類、威脅排序、共同作戰圖像、指揮官決心建議。",
-                adjacent: "鄰近理解：感測器可信度、武器分配、ROE、跨軍種協同。",
+                primary: "威脅評估、目標分類、威脅排序、共同作戰圖像、指揮官決心建議。",
+                adjacent: "感測器可信度、武器分配、ROE、跨軍種協同。",
                 expertise: "統整跨軍種意見、共同作戰圖像與指揮官決心建議，將分散分析收束為可報告、可執行的作戰選項。"
             },
             "處女座": {
                 sign: "Virgo · 土象星座",
                 traits: ["細膩", "錯誤敏感", "重秩序", "求證", "完美主義"],
                 role: "CODA 功能型參謀 · 感測器融合與戰損評估 Agent",
-                primary: "主專業：雷達與感測器融合、目標偵測、追蹤、識別可信度、BDA。",
-                adjacent: "鄰近理解：威脅評估、電子戰、資料鏈、武器分配所需的目標品質。",
+                primary: "雷達與感測器融合、目標偵測、追蹤、識別可信度、BDA。",
+                adjacent: "威脅評估、電子戰、資料鏈、武器分配所需的目標品質。",
                 expertise: "整合雷達、光電與 ISR 資料，判斷目標軌跡、識別可信度、攔截成效與 BDA 戰損評估。"
             },
             "天秤座": {
                 sign: "Libra · 風象星座",
                 traits: ["平衡", "公平", "關係張力", "保留台階", "容易猶豫"],
                 role: "CODA 功能型參謀 · 交戰規則與升高管理 Agent",
-                primary: "主專業：ROE、交戰授權、合法性、敵我識別門檻、誤擊風險、升高管理。",
-                adjacent: "鄰近理解：威脅評估、武器分配、感測器識別可信度、外交後果。",
+                primary: "ROE、交戰授權、合法性、敵我識別門檻、誤擊風險、升高管理。",
+                adjacent: "威脅評估、武器分配、感測器識別可信度、外交後果。",
                 expertise: "評估交戰規則、誤擊風險、盟軍協調、軍事外交、危機溝通與區域升高風險，界定可接受的交戰授權邊界。"
             },
             "天蠍座": {
                 sign: "Scorpio · 水象星座",
                 traits: ["深沉", "強烈", "高警覺", "追問動機", "難信表面"],
                 role: "CODA 功能型參謀 · 高價值目標與反制行動 Agent",
-                primary: "主專業：紅隊、敵方攻擊路徑、發射鏈、指管節點、滲透風險、高價值目標。",
-                adjacent: "鄰近理解：全部都要懂一點，特別是感測器、資料鏈、ROE、電子戰、武器分配與後勤弱點。",
+                primary: "紅隊、敵方攻擊路徑、發射鏈、指管節點、滲透風險、高價值目標。",
+                adjacent: "全部都要懂一點，特別是感測器、資料鏈、ROE、電子戰、武器分配與後勤弱點。",
                 expertise: "分析敵方發射源、指管節點、特戰滲透、反制行動與斬首行動可行性，尋找破壞敵攻擊鏈的關鍵點。"
             },
             "射手座": {
                 sign: "Sagittarius · 火象星座",
                 traits: ["樂觀", "自由", "大地圖思考", "愛冒險", "看輕困難"],
                 role: "CODA 功能型參謀 · 遠程打擊與空中兵力 Agent",
-                primary: "主專業：遠程打擊、防區外火力、空軍部署、敵發射平台壓制、空域規劃。",
-                adjacent: "鄰近理解：威脅排序、ROE 升高風險、資料鏈支援、後勤與機場韌性。",
+                primary: "遠程打擊、防區外火力、空軍部署、敵發射平台壓制、空域規劃。",
+                adjacent: "威脅排序、ROE 升高風險、資料鏈支援、後勤與機場韌性。",
                 expertise: "評估空軍部署、防區外打擊、敵方發射平台壓制、空域規劃與 IBCS 防空作戰的戰役層次連動。"
             },
             "摩羯座": {
                 sign: "Capricorn · 土象星座",
                 traits: ["紀律", "耐心", "重權責", "長期成果", "壓抑情緒"],
                 role: "CODA 功能型參謀 · 組織編制與作戰流程 Agent",
-                primary: "主專業：資料鏈治理、節點連線、延遲、網路韌性、SOP、訓練制度。",
-                adjacent: "鄰近理解：感測器融合、武器分配、電子戰、ROE、組織導入風險。",
+                primary: "資料鏈治理、節點連線、延遲、網路韌性、SOP、訓練制度。",
+                adjacent: "感測器融合、武器分配、電子戰、ROE、組織導入風險。",
                 expertise: "設計 IBCS 導入後的指揮架構、權責分工、SOP、訓練制度、軍法限制與組織調整期程。"
             },
             "水瓶座": {
                 sign: "Aquarius · 風象星座",
                 traits: ["獨立", "叛逆", "理想感", "重組規則", "低估摩擦"],
                 role: "CODA 功能型參謀 · 無人系統與 AI 決策 Agent",
-                primary: "主專業：AI 威脅排序、無人機蜂群反制、自動化建議、人機協同。",
-                adjacent: "鄰近理解：感測器資料品質、武器分配、電子戰、ROE、AI 誤判與資料污染。",
+                primary: "AI 威脅排序、無人機蜂群反制、自動化建議、人機協同。",
+                adjacent: "感測器資料品質、武器分配、電子戰、ROE、AI 誤判與資料污染。",
                 expertise: "研究 AI 輔助威脅排序、無人機蜂群反制、自動化建議、人機協同與哪些節點必須保留人類決策。"
             },
             "雙魚座": {
                 sign: "Pisces · 水象星座",
                 traits: ["敏感", "共感力強", "想像細膩", "察覺氛圍", "證據鏈弱"],
                 role: "CODA 功能型參謀 · 認知作戰與欺敵識別 Agent",
-                primary: "主專業：第十人原則、反對主流結論、假目標、假訊號、資訊戰、AI 判讀風險。",
-                adjacent: "鄰近理解：全部都要懂一點，特別是感測器、威脅評估、資料鏈、電子戰、ROE 與武器分配。",
+                primary: "第十人原則、反對主流結論、假目標、假訊號、資訊戰、AI 判讀風險。",
+                adjacent: "全部都要懂一點，特別是感測器、威脅評估、資料鏈、電子戰、ROE 與武器分配。",
                 expertise: "分析假目標、假訊號、資訊戰、心理戰，以及 AI 判讀遭欺騙、資料污染或產生幻覺的風險。"
             }
         };
@@ -830,12 +867,10 @@
             document.getElementById('modal-name').textContent = senderName;
             document.getElementById('modal-sign').textContent = profile.sign;
             document.getElementById('modal-role').textContent = profile.role;
-            document.getElementById('modal-expertise').textContent = [
-                SHARED_FOUNDATION_LABEL,
-                profile.primary,
-                profile.adjacent,
-                profile.expertise
-            ].filter(Boolean).join(' ');
+            document.getElementById('modal-common').textContent = SHARED_FOUNDATION_LABEL;
+            document.getElementById('modal-adjacent').textContent = profile.adjacent;
+            document.getElementById('modal-primary').textContent = profile.primary;
+            document.getElementById('modal-expertise').textContent = profile.expertise;
 
             const traitsEl = document.getElementById('modal-traits');
             traitsEl.innerHTML = profile.traits.map(t => `<span class="trait-chip">${t}</span>`).join('');
